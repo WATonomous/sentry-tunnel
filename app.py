@@ -43,7 +43,7 @@ def tunnel():
         url = f"https://{dsn.hostname}/api/{project_id}/envelope/"
         headers = {
             "Content-Type": "application/x-sentry-envelope",
-            "X-Forwarded-For": remote_addr,
+            "X-Forwarded-For": request.remote_addr,
         }
         logging.debug(f"Forwarding envelope to {dsn.hostname} for project {project_id}. {url=} {headers=}")
 
