@@ -5,6 +5,7 @@ import urllib
 import flask
 import requests
 from flask_cors import CORS
+from flask import request
 import logging
 
 ALLOWED_SENTRY_HOSTS = [s.strip() for s in os.environ.get("ALLOWED_SENTRY_HOSTS", "").split(",")]
@@ -21,6 +22,7 @@ CORS(app)
 
 @app.route("/tunnel", methods=["POST"])
 def tunnel():
+    logging.debug(f"Request headers: {request.headers}")
     try:
         envelope = flask.request.data
         piece = envelope.split(b"\n")[0].decode("utf-8")
