@@ -22,10 +22,12 @@ CORS(app)
 
 @app.route("/tunnel", methods=["POST"])
 def tunnel():
-    logging.debug(f"Request headers: {request.headers}")
-    logging.debug(f"Remote addr: {request.remote_addr}")
-    logging.debug(f"Request forwarded for: {request.headers.getlist('X-Forwarded-For')}")
     try:
+        logging.debug(f"Request headers: {request.headers}")
+        logging.debug(f"Remote addr: {request.remote_addr}")
+        logging.debug(f"Request forwarded for: {request.headers.getlist('X-Forwarded-For')}")
+        remote_addr = request.headers.getlist("X-Forwarded-For")[0] if request.headers.getlist("X-Forwarded-For") else request.remote_addr
+
         envelope = flask.request.data
         piece = envelope.split(b"\n")[0].decode("utf-8")
         header = json.loads(piece)
@@ -41,7 +43,7 @@ def tunnel():
         url = f"https://{dsn.hostname}/api/{project_id}/envelope/"
         headers = {
             "Content-Type": "application/x-sentry-envelope",
-            # "X-Forwarded-For": request.remote_addr,
+            "X-Forwarded-For": remote_addr,
         }
         logging.debug(f"Forwarding envelope to {dsn.hostname} for project {project_id}. {url=} {headers=}")
 
