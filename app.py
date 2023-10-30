@@ -37,13 +37,14 @@ def tunnel():
         if project_id not in ALLOWED_SENTRY_PROJECT_IDS:
             raise Exception(f"Invalid Project ID: {project_id}")
 
-        logging.debug(f"Forwarding envelope to {dsn.hostname} for project {project_id}")
         url = f"https://{dsn.hostname}/api/{project_id}/envelope/"
-
-        requests.post(url=url, data=envelope, headers={
+        headers = {
             "Content-Type": "application/x-sentry-envelope",
-            "X-Forwarded-For": request.remote_addr,
-        })
+            # "X-Forwarded-For": request.remote_addr,
+        }
+        logging.debug(f"Forwarding envelope to {dsn.hostname} for project {project_id}. {url=} {headers=}")
+
+        requests.post(url=url, data=envelope, headers=headers)
     except Exception as e:
         # handle exception in your preferred style,
         # e.g. by logging or forwarding to Sentry
