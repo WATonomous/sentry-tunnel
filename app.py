@@ -24,6 +24,7 @@ CORS(app)
 def tunnel():
     logging.debug(f"Request headers: {request.headers}")
     logging.debug(f"Remote addr: {request.remote_addr}")
+    logging.debug(f"Request forwarded for: {request.headers.getlist('X-Forwarded-For')}")
     try:
         envelope = flask.request.data
         piece = envelope.split(b"\n")[0].decode("utf-8")
