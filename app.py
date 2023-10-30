@@ -40,7 +40,10 @@ def tunnel():
         logging.debug(f"Forwarding envelope to {dsn.hostname} for project {project_id}")
         url = f"https://{dsn.hostname}/api/{project_id}/envelope/"
 
-        requests.post(url=url, data=envelope, headers={"Content-Type": "application/x-sentry-envelope"})
+        requests.post(url=url, data=envelope, headers={
+            "Content-Type": "application/x-sentry-envelope",
+            "X-Forwarded-For": request.remote_addr,
+        })
     except Exception as e:
         # handle exception in your preferred style,
         # e.g. by logging or forwarding to Sentry
