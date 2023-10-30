@@ -11,8 +11,9 @@ import sentry_sdk
 from sentry_sdk.integrations.logging import LoggingIntegration
 
 
-ALLOWED_SENTRY_HOSTS = [s.strip() for s in os.environ.get("ALLOWED_SENTRY_HOSTS", "").split(",")]
-ALLOWED_SENTRY_PROJECT_IDS = [s.strip() for s in os.environ.get("ALLOWED_SENTRY_PROJECT_IDS", "").split(",")]
+ALLOWED_SENTRY_HOSTS = set([s.strip() for s in os.environ.get("ALLOWED_SENTRY_HOSTS", "").split(",") if s.strip()])
+ALLOWED_SENTRY_PROJECT_IDS = set([s.strip() for s in os.environ.get("ALLOWED_SENTRY_PROJECT_IDS", "").split(",") if s.strip()])
+ALLOWED_SENTRY_DSNS = set([s.strip() for s in os.environ.get("ALLOWED_SENTRY_DSNS", "").split(",") if s.strip()])
 LOG_LEVEL = os.environ.get("LOG_LEVEL", "DEBUG")
 PORT = os.environ.get("PORT", 5000)
 HOST = os.environ.get("HOST", "0.0.0.0")
@@ -38,6 +39,27 @@ if SENTRY_DSN:
     )
 else:
     logging.info("No Sentry DSN provided, Sentry SDK disabled")
+
+def split_dsn(dsn):
+    """
+    Split a DSN into its components.
+    """
+    parsed = urllib.parse.urlparse(dsn)
+    return {
+        "scheme": parsed.scheme,
+        "host": parsed.hostname,
+        "port": parsed.port,
+        "project_id": parsed.path.strip("/"),
+        "public_key": parsed.username,
+        "secret_key": parsed.password,
+    }
+
+# Parse the DSNs into their components
+for dsn in ALLOWED_SENTRY_DSNS:
+    parsed_dsn = split_dsn(dsn)
+    ALLOWED_SENTRY_HOSTS.add(parsed_dsn["host"])
+    ALLOWED_SENTRY_PROJECT_IDS.add(parsed_dsn["project_id"])
+    
 
 app = flask.Flask(__name__)
 CORS(app)
