@@ -23,6 +23,7 @@ CORS(app)
 @app.route("/tunnel", methods=["POST"])
 def tunnel():
     logging.debug(f"Request headers: {request.headers}")
+    logging.debug(f"Remote addr: {request.remote_addr}")
     try:
         envelope = flask.request.data
         piece = envelope.split(b"\n")[0].decode("utf-8")
