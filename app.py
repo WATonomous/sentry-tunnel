@@ -3,22 +3,44 @@ import os
 import urllib
 
 import flask
-import requests
 from flask_cors import CORS
 from flask import request
 import logging
+import requests
+import sentry_sdk
+from sentry_sdk.integrations.logging import LoggingIntegration
+
 
 ALLOWED_SENTRY_HOSTS = [s.strip() for s in os.environ.get("ALLOWED_SENTRY_HOSTS", "").split(",")]
 ALLOWED_SENTRY_PROJECT_IDS = [s.strip() for s in os.environ.get("ALLOWED_SENTRY_PROJECT_IDS", "").split(",")]
 LOG_LEVEL = os.environ.get("LOG_LEVEL", "DEBUG")
 PORT = os.environ.get("PORT", 5000)
 HOST = os.environ.get("HOST", "0.0.0.0")
+SENTRY_DSN = os.environ.get("SENTRY_DSN", "")
 
 logging.basicConfig(level=LOG_LEVEL)
+if SENTRY_DSN:
+    logging.info("Sentry DSN provided, enabling Sentry SDK")
+    sentry_logging = LoggingIntegration(
+        level=logging.INFO,        # Capture info and above as breadcrumbs
+        event_level=logging.ERROR  # Send errors as events
+    )
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        integrations=[
+            sentry_logging,
+        ],
+
+        # Set traces_sample_rate to 1.0 to capture 100%
+        # of transactions for performance monitoring.
+        # We recommend adjusting this value in production,
+        traces_sample_rate=1.0,
+    )
+else:
+    logging.info("No Sentry DSN provided, Sentry SDK disabled")
 
 app = flask.Flask(__name__)
 CORS(app)
-
 
 @app.route("/tunnel", methods=["POST"])
 def tunnel():
@@ -59,6 +81,9 @@ def tunnel():
 
     return {}
 
+@app.route("/health")
+def health():
+    return "OK"
 
 if __name__ == "__main__":
     from waitress import serve
