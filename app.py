@@ -52,7 +52,7 @@ if os.getenv("SENTRY_DSN"):
             return sampling_context["parent_sampled"]
 
         # Don't need to sample health checks
-        if sampling_context.get("asgi_scope", {}).get("path", "").startswith("/health"):
+        if sampling_context.get("wsgi_environ", {}).get("PATH_INFO", "") == "/health":
             return 0
         
         # Sample everything else
