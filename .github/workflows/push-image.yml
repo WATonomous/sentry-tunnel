@@ -40,5 +40,7 @@ jobs:
         with:
           context: .
           push: true
+          build-args: |
+            DOCKER_METADATA_OUTPUT_JSON
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
