@@ -132,6 +132,10 @@ def tunnel():
 
     return {}
 
+@app.route("/build-info")
+def build_info():
+    return BUILD_INFO
+
 @app.route("/health")
 def health():
     return "OK"
