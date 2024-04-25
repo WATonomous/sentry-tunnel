@@ -152,7 +152,7 @@ def build_info():
 def health():
     current_time = time.time()
     success = True
-    # Assuming the /health endpoint is called every 10 seconds, ping Sentry at least every minute.
+    # Assuming the /health endpoint is called every 10 seconds, ping Sentry about once every minute.
     if IS_SENTRY_ENABLED and current_time - state["sentry_cron_last_ping_time"] > 50:
         state["sentry_cron_last_ping_time"] = current_time
         capture_checkin(
