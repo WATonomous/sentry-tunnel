@@ -10,8 +10,8 @@ import logging
 import requests
 import sentry_sdk
 from sentry_sdk.integrations.logging import LoggingIntegration
-from sentry_sdk.crons import monitor
-
+from sentry_sdk.crons import capture_checkin
+from sentry_sdk.crons.consts import MonitorStatus
 
 ALLOWED_SENTRY_HOSTS = set([s.strip() for s in os.environ.get("ALLOWED_SENTRY_HOSTS", "").split(",") if s.strip()])
 ALLOWED_SENTRY_PROJECT_IDS = set([s.strip() for s in os.environ.get("ALLOWED_SENTRY_PROJECT_IDS", "").split(",") if s.strip()])
@@ -151,23 +151,24 @@ def build_info():
 @app.route("/health")
 def health():
     current_time = time.time()
-    # Ping Sentry at least every minute. Using a 30s buffer to be safe.
-    if IS_SENTRY_ENABLED and current_time - state["sentry_cron_last_ping_time"] > 30:
+    success = True
+    # Assuming the /health endpoint is called every 10 seconds, ping Sentry at least every minute.
+    if IS_SENTRY_ENABLED and current_time - state["sentry_cron_last_ping_time"] > 50:
         state["sentry_cron_last_ping_time"] = current_time
-        ping_sentry()
+        capture_checkin(
+            monitor_slug='sentry-tunnel',
+            status=MonitorStatus.OK if success else MonitorStatus.ERROR,
+            monitor_config={
+                "schedule": { "type": "interval", "value": 1, "unit": "minute" },
+                "checkin_margin": 5, # minutes
+                "max_runtime": 1, # minutes
+                "failure_issue_threshold": 1,
+                "recovery_threshold": 2,
+            }
+        )
+        logging.info(f"Pinged Sentry CRON with status {'OK' if success else 'ERROR'}")
 
     return "OK"
-
-# Sentry CRON docs: https://docs.sentry.io/platforms/python/crons/
-@monitor(monitor_slug='sentry-tunnel', monitor_config={
-    "schedule": { "type": "interval", "value": 1, "unit": "minute" },
-    "checkin_margin": 5, # minutes
-    "max_runtime": 1, # minutes
-    "failure_issue_threshold": 1,
-    "recovery_threshold": 2,
-})
-def ping_sentry():
-    logging.info("Pinged Sentry CRON")
 
 @app.get("/runtime-info")
 def read_runtime_info():

@@ -4,7 +4,7 @@ This repo is derived from the [official example](https://github.com/getsentry/ex
 
 ```bash
 docker build -t sentry-tunnel .
-docker run --rm -it --name sentry-tunnel -v $(pwd):/app -e ALLOWED_SENTRY_HOSTS=o123123123.ingest.sentry.io -e ALLOWED_SENTRY_PROJECT_IDS=456456456 -e PORT=5001 -p 5001:5001 sentry-tunnel
+docker run --rm -it --name sentry-tunnel -v $(pwd):/app -e ALLOWED_SENTRY_HOSTS=o123123123.ingest.sentry.io -e ALLOWED_SENTRY_PROJECT_IDS=456456456 -e DEPLOYMENT_ENVIRONMENT=dev -e SENTRY_DSN=<optional> -p 5000:5000 sentry-tunnel
 ```
 
 Below is the original README:
